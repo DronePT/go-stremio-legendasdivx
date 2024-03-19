@@ -84,3 +84,4 @@ Temporary Items
 .env
 
 cookie.txt
+tmp/*

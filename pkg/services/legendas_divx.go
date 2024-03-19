@@ -111,6 +111,7 @@ func login(u string, p string, sid string) string {
 func Login(u string, p string) string {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
+	fmt.Println("[+]")
 
 	url := "https://www.legendasdivx.pt/forum/ucp.php?mode=login"
 
@@ -125,6 +126,7 @@ func Login(u string, p string) string {
 			cookie = login(u, p, sid)
 
 			wg.Done()
+			fmt.Println("[-]")
 		}
 	})
 
@@ -136,11 +138,19 @@ func Login(u string, p string) string {
 }
 
 func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
+	var count int
+
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
-	url := fmt.Sprintf("https://www.legendasdivx.pt/modules.php?name=Downloads&file=jz&d_op=search&op=_jz00&query=%s", imdbID)
-	// cookie := "phpbb3_2z8zs_k=; PHPSESSID=tnoo8alhltjoektv2pu6plpgl2; phpbb3_2z8zs_u=66611; phpbb3_2z8zs_sid=1436ee4b7b342a8d954c2a6f269d6732; lang=portuguese; banner1=0"
+	count++
+	fmt.Printf("[%d]\n", count)
+
+	url := fmt.Sprintf("https://www.legendasdivx.pt/modules.php?name=Downloads&file=jz&d_op=search&op=_jz00&imdbid=%s", strings.Replace(imdbID, "tt", "", 1))
+
+	subtitles := []models.Subtitle{}
+	pageVisited := map[string]bool{}
+	pageRe := regexp.MustCompile(`page=(\d+)`)
 
 	c := colly.NewCollector()
 
@@ -148,8 +158,6 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 		// Set "cookie" header
 		r.Headers.Set("Cookie", cookie)
 	})
-
-	var subtitles []models.Subtitle = []models.Subtitle{}
 
 	c.OnHTML(".sub_box", func(e *colly.HTMLElement) {
 		langImageSrc := e.DOM.Find("tr").Eq(0).Find("img").Eq(0).AttrOr("src", "")
@@ -203,7 +211,29 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 		}
 	})
 
-	c.OnScraped(func(*colly.Response) {
+	c.OnHTML(".pager_bar a", func(e *colly.HTMLElement) {
+		if e.Text == "Seguinte" {
+			page := pageRe.FindStringSubmatch(e.Attr("href"))[1]
+
+			if _, ok := pageVisited[page]; !ok {
+				wg.Add(1)
+				count++
+
+				pageVisited[page] = true
+
+				fmt.Printf("[%d] Next page %s (%s - %s)\n", count, page,
+					e.Attr("href"),
+					e.Text,
+				)
+
+				e.Request.Visit(e.Attr("href"))
+			}
+		}
+	})
+
+	c.OnScraped(func(r *colly.Response) {
+		count--
+		fmt.Printf("[%d] Scrapped! %s\n", count, r.Request.URL.String())
 		wg.Done()
 	})
 
