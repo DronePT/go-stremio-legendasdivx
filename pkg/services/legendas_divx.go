@@ -156,6 +156,7 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 
 	c.OnRequest(func(r *colly.Request) {
 		// Set "cookie" header
+		fmt.Printf("Requesting: %s\nCookie: %s\n", r.URL, cookie)
 		r.Headers.Set("Cookie", cookie)
 	})
 
@@ -174,6 +175,10 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 
 		if strings.Contains(langImageSrc, "fInglaterra") {
 			language = "eng"
+		}
+
+		if strings.Contains(langImageSrc, "fEspanha") {
+			language = "spa"
 		}
 
 		var re = regexp.MustCompile(`(?m)(^(\w{2,}[\.\s]){2,}.*-\w+$)`)

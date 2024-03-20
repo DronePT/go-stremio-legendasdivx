@@ -1,8 +1,6 @@
 package routes
 
 import (
-	"net/http"
-
 	"github.com/dronept/go-stremio-legendasdivx/pkg/handlers"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/middleware"
 	"github.com/gin-gonic/gin"
@@ -10,19 +8,19 @@ import (
 
 func Init() *gin.Engine {
 	router := gin.Default()
+	router.LoadHTMLFiles("templates/configure.tmpl")
 
 	// Configure CORS
 	router.Use(middleware.CORSMiddleware())
 
 	router.GET("/manifest.json", handlers.GetManifestHandler)
+	router.GET("/configure", handlers.GetConfigureHandler)
+	router.POST("/configure", handlers.PostConfigureHandler)
 
-	router.GET("/subtitles/:type/:id.json", handlers.GetSubtitlesHandler)
+	userRoutes := router.Group("/:config")
 
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
+	userRoutes.GET("/manifest.json", handlers.GetManifestHandler)
+	userRoutes.GET("/subtitles/:type/:id/*metadata", handlers.GetSubtitlesHandler)
 
 	return router
 }

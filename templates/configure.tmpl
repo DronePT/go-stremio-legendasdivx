@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300..900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          // Configure default font sizes
+          fontSize: {
+            'xs': '.75rem',
+            'sm': '.875rem',
+            'base': '1rem',
+            'lg': '1.125rem',
+            'xl': '1.25rem',
+            '2xl': '1.5rem',
+            '3xl': '1.875rem',
+            '4xl': '2.25rem',
+            '5xl': '3rem',
+            '6xl': '4rem',
+          },
+          // Configure sans font
+          fontFamily: {
+            sans: ['"Open Sans"', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+    }
+  </style>
+
+  <title>LegendasDivx Subtitles Addon</title>
+</head>
+
+<body class="font-sans text-base bg-slate-200 h-screen flex items-center justify-center">
+  <div class="p-8 rounded-lg bg-white w-[480px] shadow">
+    <h2 class="text-2xl">LegendasDivx Subtitles Addon</h2>
+
+    <p class="my-2 text-slate-500">
+      To use this addon, you need to set up your LegendasDivx account
+      credentials. This will allow you to download the subtitles.
+    </p>
+
+    <div class="h-px bg-slate-200 my-4 w-full"></div>
+
+    <form method="POST" action="/configure" enctype="application/x-www-form-urlencoded">
+      <div class="flex flex-col gap-2 mb-4">
+        <label for="username" class="font-bold uppercase">Username</label>
+        <input type="text" id="username" name="username" class="border p-2 border-gray-300 rounded-lg" />
+      </div>
+
+      <div class="flex flex-col gap-2 mb-4">
+        <label for="password" class="font-bold uppercase">Password</label>
+        <input type="password" id="password" name="password" class="border p-2 border-gray-300 rounded-lg" />
+      </div>
+
+      <button type="submit"
+        class="flex items-center justify-center text-lg w-full p-4 text-white rounded-lg bg-pink-500 font-bold">Install</button>
+    </form>
+</body>
+
+</html>

@@ -7,6 +7,9 @@ import (
 )
 
 func GetManifestHandler(c *gin.Context) {
+	// Get config parameter
+	_, configProvided := c.Params.Get("config")
+
 	// Respond with stremio manifest json for subtitles addon
 	c.JSON(http.StatusOK, gin.H{
 		"id":          "com.legendasdivx",
@@ -24,7 +27,7 @@ func GetManifestHandler(c *gin.Context) {
 		// User data requried for login to legendasdivx
 		"behaviorHints": map[string]interface{}{
 			"configurable":          true,
-			"configurationRequired": true,
+			"configurationRequired": !configProvided,
 		},
 		"config": []interface{}{
 			map[string]interface{}{

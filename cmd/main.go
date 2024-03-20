@@ -1,12 +1,9 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/dronept/go-stremio-legendasdivx/pkg/routes"
-	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/joho/godotenv"
 )
 
@@ -19,16 +16,14 @@ type Subtitle struct {
 func main() {
 	godotenv.Load()
 
-	username := os.Getenv("LD_USERNAME")
-	password := os.Getenv("LD_PASSWORD")
+	// username := os.Getenv("LD_USERNAME")
+	// password := os.Getenv("LD_PASSWORD")
+	// cookie := services.Login(username, password)
+	// err := os.Setenv("LD_COOKIE", cookie)
 
-	cookie := services.Login(username, password)
-
-	err := os.Setenv("LD_COOKIE", cookie)
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	router := routes.Init()
 

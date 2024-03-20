@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
@@ -18,22 +19,27 @@ type SubtitleResponse struct {
 
 func GetSubtitlesHandler(c *gin.Context) {
 	// Get imdb id from request parmams
-	metaType := c.Param("type")
-	id := strings.Replace(c.Param("id.json"), ".json", "", -1)
+	mediaType := c.Param("type")
+	id := c.Param("id")
 	// extra := c.Param("extra.json")
 
-	fmt.Println("Extra stuff:", id)
-
-	if metaType != "movies" {
+	if mediaType != "movie" {
 		c.JSON(http.StatusOK, gin.H{
 			"subtitles": []any{},
 		})
 		return
 	}
 
+	// Get config from :config param, decode it from base64
+	config := c.Param("config")
+	decodedCredentials, _ := base64.RawStdEncoding.DecodeString(config)
+	credentials := strings.Split(string(decodedCredentials), ":")
+
+	cookie := services.Login(credentials[0], credentials[1])
+
 	var subtitles []SubtitleResponse
 
-	s := services.FetchSubtitles(id, os.Getenv("LD_COOKIE"))
+	s := services.FetchSubtitles(id, cookie)
 
 	for i, subtitle := range s {
 		sid := subtitle.Name
