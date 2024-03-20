@@ -21,6 +21,7 @@ func Init() *gin.Engine {
 
 	userRoutes.GET("/manifest.json", handlers.GetManifestHandler)
 	userRoutes.GET("/subtitles/:type/:id/*metadata", handlers.GetSubtitlesHandler)
+	userRoutes.GET("/download/:lid/:name", handlers.DownloadSubtitlesHandler)
 
 	return router
 }

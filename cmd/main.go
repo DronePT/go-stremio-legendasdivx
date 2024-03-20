@@ -16,16 +16,6 @@ type Subtitle struct {
 func main() {
 	godotenv.Load()
 
-	// username := os.Getenv("LD_USERNAME")
-	// password := os.Getenv("LD_PASSWORD")
-	// cookie := services.Login(username, password)
-	// err := os.Setenv("LD_COOKIE", cookie)
-
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	router := routes.Init()
-
 	http.ListenAndServe(":8080", router)
 }

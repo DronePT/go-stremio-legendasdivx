@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
@@ -30,12 +28,7 @@ func GetSubtitlesHandler(c *gin.Context) {
 		return
 	}
 
-	// Get config from :config param, decode it from base64
-	config := c.Param("config")
-	decodedCredentials, _ := base64.RawStdEncoding.DecodeString(config)
-	credentials := strings.Split(string(decodedCredentials), ":")
-
-	cookie := services.Login(credentials[0], credentials[1])
+	cookie := GetCookie(c)
 
 	var subtitles []SubtitleResponse
 
@@ -47,9 +40,10 @@ func GetSubtitlesHandler(c *gin.Context) {
 			sid = fmt.Sprint(i)
 		}
 
-		url := fmt.Sprintf("%s%s/download/%s/%s.srt",
+		url := fmt.Sprintf("%s%s/%s/download/%s/%s.srt",
 			os.Getenv("STREMIO_SUBTITLE_PREFIX"),
 			os.Getenv("PUBLIC_ENDPOINT"),
+			c.Param("config"),
 			subtitle.DownloadUrl,
 			sid,
 		)

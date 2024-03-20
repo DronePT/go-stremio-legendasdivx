@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/dronept/go-stremio-legendasdivx/pkg/models"
+	"github.com/dronept/go-stremio-legendasdivx/pkg/utils"
 	"github.com/gocolly/colly"
 )
 
@@ -148,12 +150,14 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 			language = "spa"
 		}
 
-		var re = regexp.MustCompile(`(?m)(^(\w{2,}[\.\s]){2,}.*-[\[|\w.\]]+)`)
+		var subsRe = regexp.MustCompile(`(?m)(^(\w{2,}[\.\s]){2,}.*-[\[|\w.\]]+)`)
 
 		desc := e.DOM.Find(".td_desc").Text()
 
+		fmt.Printf("----------------------------------------\nDescription:\n\n%s\n\n----------------------------------------\n", desc)
+
 		// Find all matched strings
-		matches := re.FindAllString(desc, -1)
+		matches := subsRe.FindAllString(desc, -1)
 
 		lidRe := regexp.MustCompile(`lid=(\d+)`)
 
@@ -207,4 +211,71 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 	wg.Wait()
 
 	return subtitles
+}
+
+func Download(lid, cookie string) []string {
+	fmt.Println("Downloading subtitle with lid:", lid)
+
+	lidPath := "tmp/downloads/" + lid
+
+	// If lid directory exists, return
+	if _, err := os.Stat(lidPath); !os.IsNotExist(err) {
+		fmt.Println("Subtitle already downloaded")
+
+		files, _ := utils.ListFiles(lidPath)
+
+		return files
+	}
+
+	// https://www.legendasdivx.pt/modules.php?name=Downloads&d_op=getit&lid=451481
+
+	url := fmt.Sprintf("https://www.legendasdivx.pt/modules.php?name=Downloads&d_op=getit&lid=%s", lid)
+
+	fmt.Println("Downloading subtitle from:", url)
+
+	c := colly.NewCollector()
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	c.OnRequest(func(r *colly.Request) {
+		// Set "cookie" header
+		r.Headers.Set("Cookie", cookie)
+		fmt.Println("Visiting", r.URL)
+	})
+
+	c.OnResponse(func(r *colly.Response) {
+		// Get filename from headers Content-Disposition
+		filename := r.Headers.Get("Content-Disposition")
+
+		// Get filename from regex filename="(.+)"
+		re := regexp.MustCompile(`filename="(.+)"`)
+		filename = re.FindStringSubmatch(filename)[1]
+
+		extensionSplit := strings.Split(filename, ".")
+		extension := extensionSplit[len(extensionSplit)-1]
+
+		fmt.Printf("Filename: %s\nExtension:%s\n", filename, extension)
+
+		// Create directory under tmp/downloads/{lid}
+		os.MkdirAll(lidPath, os.ModePerm)
+
+		// Save file
+		err := r.Save(lidPath + "/subtitle." + extension)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		utils.Extract(lid)
+
+		wg.Done()
+	})
+
+	c.Visit(url)
+
+	wg.Wait()
+
+	files, _ := utils.ListFiles(lidPath)
+
+	return files
 }
