@@ -1,12 +1,10 @@
 package services
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,37 +14,6 @@ import (
 	"github.com/dronept/go-stremio-legendasdivx/pkg/models"
 	"github.com/gocolly/colly"
 )
-
-func loadCookieFromFile() string {
-	file, err := os.Open("cookie.txt")
-
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-
-		return ""
-	}
-
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	scanner.Scan()
-
-	return scanner.Text()
-}
-
-func saveCookieToFile(cookie string) {
-	file, err := os.Create("cookie.txt")
-
-	if err != nil {
-		fmt.Println("Error creating file:", err)
-
-		return
-	}
-
-	defer file.Close()
-
-	file.WriteString(cookie)
-}
 
 var cookiesMap map[string]string = map[string]string{}
 
