@@ -48,9 +48,13 @@ func saveCookieToFile(cookie string) {
 	file.WriteString(cookie)
 }
 
+var cookiesMap map[string]string = map[string]string{}
+
 func login(u string, p string, sid string) string {
-	if cookie_from_file := loadCookieFromFile(); cookie_from_file != "" {
-		return cookie_from_file
+	fmt.Println("Loggin to LegendasDivx with user:", u)
+
+	if cookie_from_map := cookiesMap[u]; cookie_from_map != "" {
+		return cookie_from_map
 	}
 
 	urlPath := "https://www.legendasdivx.pt/forum/ucp.php?mode=login"
@@ -66,7 +70,7 @@ func login(u string, p string, sid string) string {
 
 	data.Set("username", u)
 	data.Set("password", p)
-	// data.Set("autologin", "on")
+	data.Set("autologin", "on")
 	data.Set("redirect", "./ucp.php?mode=login")
 	data.Set("sid", sid)
 	data.Set("login", "Ligue-se")
@@ -89,8 +93,6 @@ func login(u string, p string, sid string) string {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Login response status:", resp.Status)
-
 	defer resp.Body.Close()
 
 	cookies := resp.Cookies()
@@ -103,7 +105,7 @@ func login(u string, p string, sid string) string {
 
 	cookieStr := strings.Join(cookie, "; ")
 
-	saveCookieToFile(cookieStr)
+	cookiesMap[u] = cookieStr
 
 	return cookieStr
 }
@@ -111,7 +113,6 @@ func login(u string, p string, sid string) string {
 func Login(u string, p string) string {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
-	fmt.Println("[+]")
 
 	url := "https://www.legendasdivx.pt/forum/ucp.php?mode=login"
 
@@ -126,7 +127,6 @@ func Login(u string, p string) string {
 			cookie = login(u, p, sid)
 
 			wg.Done()
-			fmt.Println("[-]")
 		}
 	})
 
@@ -201,8 +201,6 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 					Language:    language,
 					Name:        name,
 				})
-
-				// fmt.Printf("--- %s ---\n%v\n---------------", name, desc)
 			}
 
 		} else {
@@ -225,11 +223,6 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 				count++
 
 				pageVisited[page] = true
-
-				fmt.Printf("[%d] Next page %s (%s - %s)\n", count, page,
-					e.Attr("href"),
-					e.Text,
-				)
 
 				e.Request.Visit(e.Attr("href"))
 			}
