@@ -181,7 +181,7 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 			language = "spa"
 		}
 
-		var re = regexp.MustCompile(`(?m)(^(\w{2,}[\.\s]){2,}.*-\w+$)`)
+		var re = regexp.MustCompile(`(?m)(^(\w{2,}[\.\s]){2,}.*-[\[|\w.\]]+)`)
 
 		desc := e.DOM.Find(".td_desc").Text()
 
