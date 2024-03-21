@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/base64"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +22,6 @@ func PostConfigureHandler(c *gin.Context) {
 	// Redirect to another stremio://url
 	c.Redirect(
 		302,
-		"stremio://localhost:8080/"+encodedCredentials+"/manifest.json",
+		"stremio://"+os.Getenv("PUBLIC_ENDPOINT")+"/"+encodedCredentials+"/manifest.json",
 	)
 }
