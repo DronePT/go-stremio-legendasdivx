@@ -28,7 +28,7 @@ func DownloadSubtitlesHandler(c *gin.Context) {
 	name := strings.Split(c.Param("name"), ".srt")[0]
 
 	// Download
-	files := services.Download(lid, GetCookie(c))
+	files := services.Download(lid, GetCookie(c, false))
 
 	var matchedFiled string = ""
 
@@ -42,7 +42,7 @@ func DownloadSubtitlesHandler(c *gin.Context) {
 	if matchedFiled == "" {
 		fmt.Println("Using file: #1", files[0])
 	} else {
-		fmt.Println("Using file: #2", matchedFiled)
+		fmt.Println("Using matched file", matchedFiled)
 	}
 
 	// Send file

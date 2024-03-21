@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,12 +20,12 @@ import (
 
 var cookiesMap map[string]string = map[string]string{}
 
+func getCookieFromCache(u string) string {
+	return cookiesMap[u]
+}
+
 func login(u string, p string, sid string) string {
 	fmt.Println("Loggin to LegendasDivx with user:", u)
-
-	if cookie_from_map := cookiesMap[u]; cookie_from_map != "" {
-		return cookie_from_map
-	}
 
 	urlPath := "https://www.legendasdivx.pt/forum/ucp.php?mode=login"
 
@@ -79,8 +80,12 @@ func login(u string, p string, sid string) string {
 	return cookieStr
 }
 
-func Login(u string, p string) string {
-	// TODO: Search for existing cookie!
+func Login(u, p string, relogin bool) string {
+	cachedCookie := getCookieFromCache(u)
+
+	if cachedCookie != "" && !relogin {
+		return cachedCookie
+	}
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -108,8 +113,9 @@ func Login(u string, p string) string {
 	return cookie
 }
 
-func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
+func FetchSubtitles(imdbID string, cookie string) ([]models.Subtitle, error) {
 	var count int
+	loginFailed := false
 
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
@@ -201,6 +207,11 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 	c.OnScraped(func(r *colly.Response) {
 		count--
 		fmt.Printf("[%d] Scrapped! %s\n", count, r.Request.URL.String())
+
+		if strings.Contains(r.Request.URL.String(), "modules.php?name=Your_Account") {
+			loginFailed = true
+		}
+
 		wg.Done()
 	})
 
@@ -211,7 +222,11 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 
 	wg.Wait()
 
-	return subtitles
+	if loginFailed {
+		return nil, errors.New("Login failed")
+	}
+
+	return subtitles, nil
 }
 
 func Download(lid, cookie string) []string {

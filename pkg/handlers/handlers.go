@@ -8,13 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetCookie(c *gin.Context) string {
+func GetCookie(c *gin.Context, relogin bool) string {
 	// Get config from :config param, decode it from base64
 	config := c.Param("config")
 	decodedCredentials, _ := base64.RawStdEncoding.DecodeString(config)
 	credentials := strings.Split(string(decodedCredentials), ":")
 
-	cookie := services.Login(credentials[0], credentials[1])
+	cookie := services.Login(credentials[0], credentials[1], relogin)
 
 	return cookie
 }

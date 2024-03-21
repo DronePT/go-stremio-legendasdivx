@@ -28,11 +28,17 @@ func GetSubtitlesHandler(c *gin.Context) {
 		return
 	}
 
-	cookie := GetCookie(c)
+	cookie := GetCookie(c, false)
 
 	var subtitles []SubtitleResponse
 
-	s := services.FetchSubtitles(imdbId, cookie)
+	s, err := services.FetchSubtitles(imdbId, cookie)
+
+	if err != nil && err.Error() == "Login failed" {
+		GetCookie(c, true)
+		GetSubtitlesHandler(c)
+		return
+	}
 
 	for i, subtitle := range s {
 		sid := subtitle.Name
