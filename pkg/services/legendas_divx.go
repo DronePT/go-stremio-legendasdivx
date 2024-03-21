@@ -80,6 +80,8 @@ func login(u string, p string, sid string) string {
 }
 
 func Login(u string, p string) string {
+	// TODO: Search for existing cookie!
+
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 

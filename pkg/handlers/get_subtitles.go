@@ -18,7 +18,7 @@ type SubtitleResponse struct {
 func GetSubtitlesHandler(c *gin.Context) {
 	// Get imdb id from request parmams
 	mediaType := c.Param("type")
-	id := c.Param("id")
+	imdbId := c.Param("id")
 	// extra := c.Param("extra.json")
 
 	if mediaType != "movie" {
@@ -32,7 +32,7 @@ func GetSubtitlesHandler(c *gin.Context) {
 
 	var subtitles []SubtitleResponse
 
-	s := services.FetchSubtitles(id, cookie)
+	s := services.FetchSubtitles(imdbId, cookie)
 
 	for i, subtitle := range s {
 		sid := subtitle.Name
@@ -40,7 +40,7 @@ func GetSubtitlesHandler(c *gin.Context) {
 			sid = fmt.Sprint(i)
 		}
 
-		url := fmt.Sprintf("%s%s/%s/download/%s/%s.srt",
+		url := fmt.Sprintf("%s%s/%s/download/%s/%s.vtt",
 			os.Getenv("STREMIO_SUBTITLE_PREFIX"),
 			os.Getenv("PUBLIC_ENDPOINT"),
 			c.Param("config"),
