@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/base64"
+	"net/url"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -19,9 +20,18 @@ func PostConfigureHandler(c *gin.Context) {
 		[]byte(username + ":" + password),
 	)
 
+	url, err := url.Parse(os.Getenv("PUBLIC_ENDPOINT"))
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Internal Server Error"})
+		return
+	}
+
+	hostname := url.Hostname()
+
 	// Redirect to another stremio://url
 	c.Redirect(
 		302,
-		"stremio://"+os.Getenv("PUBLIC_ENDPOINT")+"/"+encodedCredentials+"/manifest.json",
+		"stremio://"+hostname+"/"+encodedCredentials+"/manifest.json",
 	)
 }
