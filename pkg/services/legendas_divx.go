@@ -110,12 +110,10 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 	var count int
 
 	wg := &sync.WaitGroup{}
-	wg.Add(1)
+	wg.Add(2)
 
 	count++
 	fmt.Printf("[%d]\n", count)
-
-	url := fmt.Sprintf("https://www.legendasdivx.pt/modules.php?name=Downloads&file=jz&d_op=search&op=_jz00&imdbid=%s", strings.Replace(imdbID, "tt", "", 1))
 
 	subtitles := []models.Subtitle{}
 	pageVisited := map[string]bool{}
@@ -130,6 +128,8 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 	})
 
 	c.OnHTML(".sub_box", func(e *colly.HTMLElement) {
+		title := e.DOM.Find(".sub_header").Eq(0).Find("b").Eq(0).Text()
+
 		langImageSrc := e.DOM.Find("tr").Eq(0).Find("img").Eq(0).AttrOr("src", "")
 
 		var language string
@@ -150,14 +150,10 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 			language = "spa"
 		}
 
-		var subsRe = regexp.MustCompile(`(?m)(^(\w{2,}[\.\s]){2,}.*-[\[|\w.\]]+)`)
-
 		desc := e.DOM.Find(".td_desc").Text()
 
-		fmt.Printf("----------------------------------------\nDescription:\n\n%s\n\n----------------------------------------\n", desc)
-
 		// Find all matched strings
-		matches := subsRe.FindAllString(desc, -1)
+		matches := utils.FindSubtitlesInText(desc, title)
 
 		lidRe := regexp.MustCompile(`lid=(\d+)`)
 
@@ -206,7 +202,10 @@ func FetchSubtitles(imdbID string, cookie string) []models.Subtitle {
 		wg.Done()
 	})
 
-	c.Visit(url)
+	url := fmt.Sprintf("https://www.legendasdivx.pt/modules.php?name=Downloads&file=jz&d_op=search&op=_jz00&imdbid=%s", strings.Replace(imdbID, "tt", "", 1))
+
+	c.Visit(url + "&form_cat=29")
+	c.Visit(url + "&form_cat=28")
 
 	wg.Wait()
 
