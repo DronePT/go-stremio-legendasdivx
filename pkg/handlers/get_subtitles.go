@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
@@ -41,7 +42,8 @@ func GetSubtitlesHandler(c *gin.Context) {
 	}
 
 	for i, subtitle := range s {
-		sid := subtitle.Name
+		sid := strings.TrimSpace(subtitle.Name)
+
 		if sid == "" {
 			sid = fmt.Sprint(i)
 		}

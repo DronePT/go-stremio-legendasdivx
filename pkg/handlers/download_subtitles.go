@@ -2,24 +2,30 @@ package handlers
 
 import (
 	"fmt"
+	"net/url"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
 )
 
-func match(a, b string) bool {
-	// Replace all spaces with dots, lowercase and compare
-	a = strings.ReplaceAll(a, " ", ".")
-	b = strings.ReplaceAll(b, " ", ".")
+func scoredMatch(a, b string) int {
+	// This function should split the strings by spaces, and then compare each word and add a +1 to score if they match
 
-	a = strings.ToLower(a)
-	b = strings.ToLower(b)
+	score := 0
+	reSplit := regexp.MustCompile(`(?mi)\W+`)
 
-	fmt.Printf("Comparing:\n%s\n%s\n", a, b)
+	words := reSplit.Split(b, -1)
 
-	return strings.Contains(a, b)
+	for _, word := range words {
+		if strings.Contains(a, word) {
+			score++
+		}
+	}
+
+	return score
 }
 
 func DownloadSubtitlesHandler(c *gin.Context) {
@@ -30,21 +36,23 @@ func DownloadSubtitlesHandler(c *gin.Context) {
 	// Download
 	files := services.Download(lid, GetCookie(c, false))
 
-	var matchedFiled string = ""
+	lastScore := -1
+	bestScoreIndex := 0
+
+	decodedName, _ := url.QueryUnescape(name)
+
+	fmt.Println("- Matching: ", decodedName)
 
 	// find name inside files, else return first
-	for _, fname := range files {
-		if match(path.Base(fname), name) {
-			matchedFiled = fname
+	for i, fname := range files {
+		if score := scoredMatch(path.Base(fname), decodedName); score > lastScore {
+			lastScore = score
+			bestScoreIndex = i
 		}
 	}
 
-	if matchedFiled == "" {
-		fmt.Println("Using file: #1", files[0])
-	} else {
-		fmt.Println("Using matched file", matchedFiled)
-	}
+	fmt.Println("- Best match: ", files[bestScoreIndex])
 
 	// Send file
-	c.File(files[0])
+	c.File(files[bestScoreIndex])
 }
