@@ -15,9 +15,11 @@ func scoredMatch(a, b string) int {
 	// This function should split the strings by spaces, and then compare each word and add a +1 to score if they match
 
 	score := 0
-	reSplit := regexp.MustCompile(`(?mi)\W+`)
+	reSplit := regexp.MustCompile(`(\w{2,})`)
 
-	words := reSplit.Split(b, -1)
+	words := reSplit.FindAllString(strings.ToLower(b), -1)
+
+	a = strings.ToLower(a)
 
 	for _, word := range words {
 		if strings.Contains(a, word) {

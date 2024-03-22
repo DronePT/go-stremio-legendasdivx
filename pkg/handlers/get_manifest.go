@@ -17,11 +17,9 @@ func GetManifestHandler(c *gin.Context) {
 		"name":        "LegendasDivx",
 		"description": "LegendasDivx subtitles addon for Stremio",
 
-		"resources": []string{"subtitles"},
-		"types":     []string{"movie"},
-		"catalogs":  []interface{}{},
-		// TODO: Add support for series
-		// "types":      []string{"movie", "series"},
+		"resources":  []string{"subtitles"},
+		"catalogs":   []interface{}{},
+		"types":      []string{"movie", "series"},
 		"idPrefixes": []string{"tt"},
 
 		// User data requried for login to legendasdivx

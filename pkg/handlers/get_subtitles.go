@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
+	"strconv"
 
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
@@ -22,7 +22,7 @@ func GetSubtitlesHandler(c *gin.Context) {
 	imdbId := c.Param("id")
 	// extra := c.Param("extra.json")
 
-	if mediaType != "movie" {
+	if mediaType != "movie" && mediaType != "series" {
 		c.JSON(http.StatusOK, gin.H{
 			"subtitles": []any{},
 		})
@@ -42,22 +42,27 @@ func GetSubtitlesHandler(c *gin.Context) {
 	}
 
 	for i, subtitle := range s {
-		sid := strings.TrimSpace(subtitle.Name)
+		name := subtitle.Name
+		id := subtitle.Id
 
-		if sid == "" {
-			sid = fmt.Sprint(i)
+		if name == "" {
+			name = "subtitle"
 		}
 
-		url := fmt.Sprintf("%s%s/%s/download/%s/%s.vtt",
+		if id == "" {
+			id = strconv.Itoa(i)
+		}
+
+		url := fmt.Sprintf("%s%s/%s/download/%s/%s",
 			os.Getenv("STREMIO_SUBTITLE_PREFIX"),
 			os.Getenv("PUBLIC_ENDPOINT"),
 			c.Param("config"),
 			subtitle.DownloadUrl,
-			sid,
+			name,
 		)
 
 		subtitles = append(subtitles, SubtitleResponse{
-			Id:       sid,
+			Id:       id,
 			Url:      url,
 			Language: subtitle.Language,
 		})

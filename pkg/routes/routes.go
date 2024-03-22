@@ -23,7 +23,7 @@ func Init() *gin.Engine {
 	userRoutes.POST("/configure", handlers.PostConfigureHandler)
 	userRoutes.GET("/manifest.json", handlers.GetManifestHandler)
 	userRoutes.GET("/subtitles/:type/:id/*metadata", handlers.GetSubtitlesHandler)
-	userRoutes.GET("/download/:lid/:name", handlers.DownloadSubtitlesHandler)
+	userRoutes.GET("/download/:lid/*name", handlers.DownloadSubtitlesHandler)
 
 	return router
 }

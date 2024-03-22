@@ -28,12 +28,10 @@ func matchCompatibleSubtitles(text string, subsRe *regexp.Regexp) []string {
 func FindSubtitlesInText(text, title string) []string {
 	text = RemoveAccents(text)
 
-	// Get title
 	titleRe := regexp.MustCompile(`(?mi)\w+`)
 	title = strings.Join(titleRe.FindAllString(title, -1), "[. ]")
 
-	// var subsRe = regexp.MustCompile(`(?mi)^(` + title + `[ .]{1}[a-z.()\[\]-]*[0-9]{4}[-()\[\]. a-z0-9]+)`)
-	var subsRe = regexp.MustCompile(`(?mi)^(` + title + `.*)`)
+	var subsRe = regexp.MustCompile(`(?mi)^(` + title + `.+)`)
 
 	if strings.Contains(strings.ToLower(text), "compativel") {
 		matches := matchCompatibleSubtitles(text, subsRe)

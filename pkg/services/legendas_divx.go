@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -114,11 +115,33 @@ func Login(u, p string, relogin bool) string {
 }
 
 func FetchSubtitles(imdbID string, cookie string) ([]models.Subtitle, error) {
+	url := fmt.Sprintf("https://www.legendasdivx.pt/modules.php?name=Downloads&file=jz&d_op=search&op=_jz00&imdbid=%s", strings.Replace(imdbID, "tt", "", 1))
+
+	var season string
+	var episode string
+
+	isSeries := strings.Contains(imdbID, ":")
+
+	if isSeries {
+		imdbIdSplit := strings.Split(imdbID, ":")
+
+		imdbID = imdbIdSplit[0]
+		season = imdbIdSplit[1]
+		episode = imdbIdSplit[2]
+
+		url = fmt.Sprintf(
+			"https://www.legendasdivx.pt/modules.php?name=Downloads&file=jz&d_op=jz_00&faz=pesquisa_episodio&imdb=%s&temporada=%s&episodio=%s",
+			strings.Replace(imdbID, "tt", "", 1),
+			season,
+			episode,
+		)
+	}
+
 	var count int
 	loginFailed := false
 
 	wg := &sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(1)
 
 	count++
 	fmt.Printf("[%d]\n", count)
@@ -135,30 +158,12 @@ func FetchSubtitles(imdbID string, cookie string) ([]models.Subtitle, error) {
 		r.Headers.Set("Cookie", cookie)
 	})
 
+	idsInUse := []string{}
+
 	c.OnHTML(".sub_box", func(e *colly.HTMLElement) {
-		title := e.DOM.Find(".sub_header").Eq(0).Find("b").Eq(0).Text()
-
-		langImageSrc := e.DOM.Find("tr").Eq(0).Find("img").Eq(0).AttrOr("src", "")
-
-		var language string
-
-		if strings.Contains(langImageSrc, "portugal") {
-			language = "por"
-		}
-
-		if strings.Contains(langImageSrc, "brazil") {
-			language = "pob"
-		}
-
-		if strings.Contains(langImageSrc, "fInglaterra") {
-			language = "eng"
-		}
-
-		if strings.Contains(langImageSrc, "fEspanha") {
-			language = "spa"
-		}
-
-		desc := e.DOM.Find(".td_desc").Text()
+		title := parseTitle(e)
+		language := parseLanguage(e)
+		desc := parseDescription(e)
 
 		// Find all matched strings
 		matches := utils.FindSubtitlesInText(desc, title)
@@ -171,10 +176,23 @@ func FetchSubtitles(imdbID string, cookie string) ([]models.Subtitle, error) {
 				href := e.DOM.Find("a.sub_download").Eq(0).AttrOr("href", "")
 				lid := lidRe.FindStringSubmatch(href)[1]
 
+				name = strings.TrimSpace(name)
+
+				if isSeries {
+					name = fmt.Sprintf("%s-S%02sE%02s", name, season, episode)
+				}
+
+				if slices.Contains(idsInUse, name) {
+					name = fmt.Sprintf("%s-%d", name, len(idsInUse)+1)
+				}
+
+				idsInUse = append(idsInUse, name)
+
 				subtitles = append(subtitles, models.Subtitle{
-					DownloadUrl: lid,
-					Language:    language,
+					Id:          name,
 					Name:        name,
+					Language:    language,
+					DownloadUrl: lid,
 				})
 			}
 
@@ -182,9 +200,16 @@ func FetchSubtitles(imdbID string, cookie string) ([]models.Subtitle, error) {
 			href := e.DOM.Find("a.sub_download").Eq(0).AttrOr("href", "")
 			lid := lidRe.FindStringSubmatch(href)[1]
 
+			var name string
+
+			if isSeries {
+				name = fmt.Sprintf("S%02sE%02s", season, episode)
+			}
+
 			subtitles = append(subtitles, models.Subtitle{
-				DownloadUrl: lid,
+				Name:        name,
 				Language:    language,
+				DownloadUrl: lid,
 			})
 		}
 	})
@@ -215,10 +240,7 @@ func FetchSubtitles(imdbID string, cookie string) ([]models.Subtitle, error) {
 		wg.Done()
 	})
 
-	url := fmt.Sprintf("https://www.legendasdivx.pt/modules.php?name=Downloads&file=jz&d_op=search&op=_jz00&imdbid=%s", strings.Replace(imdbID, "tt", "", 1))
-
-	c.Visit(url + "&form_cat=29")
-	c.Visit(url + "&form_cat=28")
+	c.Visit(url)
 
 	wg.Wait()
 
@@ -227,6 +249,38 @@ func FetchSubtitles(imdbID string, cookie string) ([]models.Subtitle, error) {
 	}
 
 	return subtitles, nil
+}
+
+func parseDescription(e *colly.HTMLElement) string {
+	return e.DOM.Find(".td_desc").Text()
+}
+
+func parseTitle(e *colly.HTMLElement) string {
+	return e.DOM.Find(".sub_header").Eq(0).Find("b").Eq(0).Text()
+}
+
+func parseLanguage(e *colly.HTMLElement) string {
+	langImageSrc := e.DOM.Find("tr").Eq(0).Find("img").Eq(0).AttrOr("src", "")
+
+	var language string
+
+	if strings.Contains(langImageSrc, "portugal") {
+		language = "por"
+	}
+
+	if strings.Contains(langImageSrc, "brazil") {
+		language = "pob"
+	}
+
+	if strings.Contains(langImageSrc, "fInglaterra") {
+		language = "eng"
+	}
+
+	if strings.Contains(langImageSrc, "fEspanha") {
+		language = "spa"
+	}
+
+	return language
 }
 
 func Download(lid, cookie string) []string {
