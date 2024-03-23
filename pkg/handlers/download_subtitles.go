@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -65,10 +64,7 @@ func downloadSubtitlesHandler(services *services.Services) func(c *gin.Context) 
 		fmt.Println("- Best match: ", files[bestScoreIndex])
 
 		// Read file
-		decoded, _ := decode(files[bestScoreIndex])
-
-		// transform reader to UTF-8
-		sub, err := astisub.ReadFromSRT(decoded)
+		sub, err := decode(files[bestScoreIndex])
 
 		// Read file
 		// sub, err := astisub.OpenFile(files[bestScoreIndex])
@@ -98,7 +94,7 @@ func downloadSubtitlesHandler(services *services.Services) func(c *gin.Context) 
 	}
 }
 
-func decode(filename string) (io.Reader, error) {
+func decode(filename string) (o *astisub.Subtitles, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -116,8 +112,8 @@ func decode(filename string) (io.Reader, error) {
 	if result.Charset == "ISO-8859-1" {
 		decodingReader := transform.NewReader(file, charmap.ISO8859_1.NewDecoder())
 
-		return decodingReader, nil
+		return astisub.ReadFromSRT(decodingReader)
 	}
 
-	return file, nil
+	return astisub.ReadFromSRT(file)
 }
