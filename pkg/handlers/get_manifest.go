@@ -17,7 +17,12 @@ func getManifestHandler(c *gin.Context) {
 		"name":        "LegendasDivx",
 		"description": "LegendasDivx subtitles addon for Stremio",
 
-		"resources":  []string{"subtitles"},
+		"resources": []map[string]any{
+			{
+				"name":  "subtitles",
+				"types": []string{"movie", "series"},
+			},
+		},
 		"catalogs":   []interface{}{},
 		"types":      []string{"movie", "series"},
 		"idPrefixes": []string{"tt"},
@@ -26,20 +31,6 @@ func getManifestHandler(c *gin.Context) {
 		"behaviorHints": map[string]interface{}{
 			"configurable":          true,
 			"configurationRequired": !configProvided,
-		},
-		"config": []interface{}{
-			map[string]interface{}{
-				"key":      "username",
-				"type":     "text",
-				"title":    "LegendasDivx Username",
-				"required": true,
-			},
-			map[string]interface{}{
-				"key":      "password",
-				"type":     "password",
-				"title":    "LegendasDivx Password",
-				"required": true,
-			},
 		},
 	})
 }

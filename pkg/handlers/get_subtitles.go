@@ -58,14 +58,14 @@ func getSubtitlesHandler(services *services.Services) func(c *gin.Context) {
 
 			downloadUrl := fmt.Sprintf("%s/%s/download/%s/%s/subtitles.vtt",
 				os.Getenv("PUBLIC_ENDPOINT"),
-				c.Param("config"),
+				url.QueryEscape(c.Param("config")),
 				subtitle.DownloadUrl,
-				name,
+				url.QueryEscape(name),
 			)
 
 			url := fmt.Sprintf("%s%s",
 				os.Getenv("STREMIO_SUBTITLE_PREFIX"),
-				url.QueryEscape(downloadUrl),
+				downloadUrl,
 			)
 
 			subtitles = append(subtitles, SubtitleResponse{
