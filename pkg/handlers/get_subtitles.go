@@ -56,7 +56,7 @@ func getSubtitlesHandler(services *services.Services) func(c *gin.Context) {
 				id = strconv.Itoa(i)
 			}
 
-			downloadUrl := fmt.Sprintf("%s/%s/download/%s/%s",
+			downloadUrl := fmt.Sprintf("%s/%s/download/%s/%s/subtitles.vtt",
 				os.Getenv("PUBLIC_ENDPOINT"),
 				c.Param("config"),
 				subtitle.DownloadUrl,
