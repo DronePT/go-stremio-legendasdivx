@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 
@@ -53,12 +54,16 @@ func GetSubtitlesHandler(c *gin.Context) {
 			id = strconv.Itoa(i)
 		}
 
-		url := fmt.Sprintf("%s%s/%s/download/%s/%s",
-			os.Getenv("STREMIO_SUBTITLE_PREFIX"),
+		downloadUrl := fmt.Sprintf("%s/%s/download/%s/%s",
 			os.Getenv("PUBLIC_ENDPOINT"),
 			c.Param("config"),
 			subtitle.DownloadUrl,
 			name,
+		)
+
+		url := fmt.Sprintf("%s%s",
+			os.Getenv("STREMIO_SUBTITLE_PREFIX"),
+			url.QueryEscape(downloadUrl),
 		)
 
 		subtitles = append(subtitles, SubtitleResponse{
