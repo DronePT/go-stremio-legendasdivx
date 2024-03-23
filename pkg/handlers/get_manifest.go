@@ -3,10 +3,11 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/dronept/go-stremio-legendasdivx/pkg/version"
 	"github.com/gin-gonic/gin"
 )
 
-func getManifestHandler(appVersion string) func(c *gin.Context) {
+func getManifestHandler() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		// Get config parameter
 		_, configProvided := c.Params.Get("config")
@@ -14,7 +15,7 @@ func getManifestHandler(appVersion string) func(c *gin.Context) {
 		// Respond with stremio manifest json for subtitles addon
 		c.JSON(http.StatusOK, gin.H{
 			"id":          "com.legendasdivx",
-			"version":     appVersion,
+			"version":     version.GetVersion(),
 			"name":        "LegendasDivx",
 			"description": "LegendasDivx subtitles addon for Stremio",
 

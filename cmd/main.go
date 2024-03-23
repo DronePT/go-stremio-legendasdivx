@@ -15,8 +15,6 @@ type Subtitle struct {
 	Subtitles   []string
 }
 
-const AppVersion = "1.0.1"
-
 func main() {
 	configs.InitConfig()
 
@@ -27,7 +25,7 @@ func main() {
 	)
 
 	services := services.NewServices()
-	router := routes.CreateRouter(services, AppVersion)
+	router := routes.CreateRouter(services)
 
 	fmt.Println("Server running on port :8080")
 

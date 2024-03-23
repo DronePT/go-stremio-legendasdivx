@@ -13,9 +13,9 @@ type Handlers struct {
 	DownloadSubtitlesHandler func(c *gin.Context)
 }
 
-func NewHandlers(s *services.Services, appVersion string) *Handlers {
+func NewHandlers(s *services.Services) *Handlers {
 	return &Handlers{
-		GetManifestHandler:       getManifestHandler(appVersion),
+		GetManifestHandler:       getManifestHandler(),
 		GetConfigureHandler:      getConfigureHandler,
 		PostConfigureHandler:     postConfigureHandler,
 		GetSubtitlesHandler:      getSubtitlesHandler(s),
