@@ -3,8 +3,10 @@ package handlers
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -12,6 +14,8 @@ import (
 	"github.com/asticode/go-astisub"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/transform"
 )
 
 func scoredMatch(a, b string) int {
@@ -60,7 +64,15 @@ func downloadSubtitlesHandler(services *services.Services) func(c *gin.Context) 
 		fmt.Println("- Best match: ", files[bestScoreIndex])
 
 		// Read file
-		sub, err := astisub.OpenFile(files[bestScoreIndex])
+		decoded, _ := decode(files[bestScoreIndex])
+
+		fmt.Println("- Decoded: ", decoded)
+
+		// transform reader to UTF-8
+		sub, err := astisub.ReadFromSRT(decoded)
+
+		// Read file
+		// sub, err := astisub.OpenFile(files[bestScoreIndex])
 
 		if err != nil {
 			// Handle the error here
@@ -69,7 +81,7 @@ func downloadSubtitlesHandler(services *services.Services) func(c *gin.Context) 
 			return
 		}
 
-		c.Header("Content-type", "text/vrr")
+		c.Header("Content-type", "text/vtt")
 
 		// Convert to VTT
 		var buff = &bytes.Buffer{}
@@ -85,4 +97,24 @@ func downloadSubtitlesHandler(services *services.Services) func(c *gin.Context) 
 		// Write file
 		c.String(http.StatusOK, buff.String())
 	}
+}
+
+func decode(filename string) (io.Reader, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	decodingReader := transform.NewReader(file, charmap.Windows1252.NewDecoder())
+
+	return decodingReader, nil
+
+	// lines := []string{}
+
+	// scanner := bufio.NewScanner(decodingReader)
+	// for scanner.Scan() {
+	// 	lines = append(lines, scanner.Text())
+	// }
+	// return strings.Join(lines, "\n"), scanner.Err()
 }
