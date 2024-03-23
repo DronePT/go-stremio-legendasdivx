@@ -17,63 +17,69 @@ type SubtitleResponse struct {
 	Language string `json:"lang"`
 }
 
-func GetSubtitlesHandler(c *gin.Context) {
-	// Get imdb id from request parmams
-	mediaType := c.Param("type")
-	imdbId := c.Param("id")
-	// extra := c.Param("extra.json")
+func getSubtitlesHandler(services *services.Services) func(c *gin.Context) {
+	return func(c *gin.Context) {
 
-	if mediaType != "movie" && mediaType != "series" {
+		// Get imdb id from request parmams
+		mediaType := c.Param("type")
+		imdbId := c.Param("id")
+		// extra := c.Param("extra.json")
+
+		if mediaType != "movie" && mediaType != "series" {
+			c.JSON(http.StatusOK, gin.H{
+				"subtitles": []any{},
+			})
+			return
+		}
+
+		cookie := getCookie(c, false, services)
+
+		var subtitles []SubtitleResponse
+
+		s, err := services.LegendasDivx.GetSubtitles(imdbId, cookie)
+
+		if err != nil && err.Error() == "Login failed" {
+			getCookie(c, true, services)
+			getSubtitlesHandler(services)(c)
+			return
+		}
+
+		for i, subtitle := range s {
+			name := subtitle.Name
+			id := subtitle.Id
+
+			if name == "" {
+				name = "subtitle"
+			}
+
+			if id == "" {
+				id = strconv.Itoa(i)
+			}
+
+			downloadUrl := fmt.Sprintf("%s/%s/download/%s/%s",
+				os.Getenv("PUBLIC_ENDPOINT"),
+				c.Param("config"),
+				subtitle.DownloadUrl,
+				name,
+			)
+
+			url := fmt.Sprintf("%s%s",
+				os.Getenv("STREMIO_SUBTITLE_PREFIX"),
+				url.QueryEscape(downloadUrl),
+			)
+
+			subtitles = append(subtitles, SubtitleResponse{
+				Id:       id,
+				Url:      url,
+				Language: subtitle.Language,
+			})
+		}
+
+		c.Header("Cache-Control", "max-age=86400,staleRevalidate=stale-while-revalidate, staleError=stale-if-error, public")
+
 		c.JSON(http.StatusOK, gin.H{
-			"subtitles": []any{},
+			"subtitles": subtitles,
 		})
-		return
+
 	}
-
-	cookie := GetCookie(c, false)
-
-	var subtitles []SubtitleResponse
-
-	s, err := services.FetchSubtitles(imdbId, cookie)
-
-	if err != nil && err.Error() == "Login failed" {
-		GetCookie(c, true)
-		GetSubtitlesHandler(c)
-		return
-	}
-
-	for i, subtitle := range s {
-		name := subtitle.Name
-		id := subtitle.Id
-
-		if name == "" {
-			name = "subtitle"
-		}
-
-		if id == "" {
-			id = strconv.Itoa(i)
-		}
-
-		downloadUrl := fmt.Sprintf("%s/%s/download/%s/%s",
-			os.Getenv("PUBLIC_ENDPOINT"),
-			c.Param("config"),
-			subtitle.DownloadUrl,
-			name,
-		)
-
-		url := fmt.Sprintf("%s%s",
-			os.Getenv("STREMIO_SUBTITLE_PREFIX"),
-			url.QueryEscape(downloadUrl),
-		)
-
-		subtitles = append(subtitles, SubtitleResponse{
-			Id:       id,
-			Url:      url,
-			Language: subtitle.Language,
-		})
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"subtitles": subtitles,
-	})
 }

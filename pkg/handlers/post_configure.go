@@ -10,7 +10,7 @@ import (
 
 const MySecret string = "abc&1*~#^2^#s0^=)^^7%b34"
 
-func PostConfigureHandler(c *gin.Context) {
+func postConfigureHandler(c *gin.Context) {
 	// Get application/x-www-form-urlencoded data
 	username := c.PostForm("username")
 	password := c.PostForm("password")

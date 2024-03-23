@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetManifestHandler(c *gin.Context) {
+func getManifestHandler(c *gin.Context) {
 	// Get config parameter
 	_, configProvided := c.Params.Get("config")
 

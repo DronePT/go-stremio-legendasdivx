@@ -6,6 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetConfigureHandler(c *gin.Context) {
+func getConfigureHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "configure.tmpl", nil)
 }

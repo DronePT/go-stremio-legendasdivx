@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/dronept/go-stremio-legendasdivx/pkg/routes"
+	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/joho/godotenv"
 )
 
@@ -27,7 +28,8 @@ func main() {
 		os.Getenv("PUBLIC_ENDPOINT"),
 	)
 
-	router := routes.Init()
+	services := services.NewServices()
+	router := routes.CreateRouter(services)
 
 	fmt.Println("Server running on port :8080")
 

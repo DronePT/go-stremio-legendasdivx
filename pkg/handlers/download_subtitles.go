@@ -30,31 +30,33 @@ func scoredMatch(a, b string) int {
 	return score
 }
 
-func DownloadSubtitlesHandler(c *gin.Context) {
-	// get :lid and :name from params
-	lid := c.Param("lid")
-	name := strings.Split(c.Param("name"), ".srt")[0]
+func downloadSubtitlesHandler(services *services.Services) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		// get :lid and :name from params
+		lid := c.Param("lid")
+		name := strings.Split(c.Param("name"), ".srt")[0]
 
-	// Download
-	files := services.Download(lid, GetCookie(c, false))
+		// Download
+		files := services.LegendasDivx.Download(lid, getCookie(c, false, services))
 
-	lastScore := -1
-	bestScoreIndex := 0
+		lastScore := -1
+		bestScoreIndex := 0
 
-	decodedName, _ := url.QueryUnescape(name)
+		decodedName, _ := url.QueryUnescape(name)
 
-	fmt.Println("- Matching: ", decodedName)
+		fmt.Println("- Matching: ", decodedName)
 
-	// find name inside files, else return first
-	for i, fname := range files {
-		if score := scoredMatch(path.Base(fname), decodedName); score > lastScore {
-			lastScore = score
-			bestScoreIndex = i
+		// find name inside files, else return first
+		for i, fname := range files {
+			if score := scoredMatch(path.Base(fname), decodedName); score > lastScore {
+				lastScore = score
+				bestScoreIndex = i
+			}
 		}
+
+		fmt.Println("- Best match: ", files[bestScoreIndex])
+
+		// Send file
+		c.File(files[bestScoreIndex])
 	}
-
-	fmt.Println("- Best match: ", files[bestScoreIndex])
-
-	// Send file
-	c.File(files[bestScoreIndex])
 }

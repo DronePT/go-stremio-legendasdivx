@@ -1,20 +1,24 @@
 package handlers
 
 import (
-	"encoding/base64"
-	"strings"
-
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
 )
 
-func GetCookie(c *gin.Context, relogin bool) string {
-	// Get config from :config param, decode it from base64
-	config := c.Param("config")
-	decodedCredentials, _ := base64.RawStdEncoding.DecodeString(config)
-	credentials := strings.Split(string(decodedCredentials), ":")
+type Handlers struct {
+	GetManifestHandler       func(c *gin.Context)
+	GetConfigureHandler      func(c *gin.Context)
+	PostConfigureHandler     func(c *gin.Context)
+	GetSubtitlesHandler      func(c *gin.Context)
+	DownloadSubtitlesHandler func(c *gin.Context)
+}
 
-	cookie := services.Login(credentials[0], credentials[1], relogin)
-
-	return cookie
+func NewHandlers(s *services.Services) *Handlers {
+	return &Handlers{
+		GetManifestHandler:       getManifestHandler,
+		GetConfigureHandler:      getConfigureHandler,
+		PostConfigureHandler:     postConfigureHandler,
+		GetSubtitlesHandler:      getSubtitlesHandler(s),
+		DownloadSubtitlesHandler: downloadSubtitlesHandler(s),
+	}
 }

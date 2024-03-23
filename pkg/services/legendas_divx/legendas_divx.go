@@ -1,4 +1,4 @@
-package services
+package legendasdivx
 
 import (
 	"errors"
@@ -25,96 +25,13 @@ func getCookieFromCache(u string) string {
 	return cookiesMap[u]
 }
 
-func login(u string, p string, sid string) string {
-	fmt.Println("Loggin to LegendasDivx with user:", u)
+type LegendasDivx struct{}
 
-	urlPath := "https://www.legendasdivx.pt/forum/ucp.php?mode=login"
-
-	client := &http.Client{
-		Timeout: time.Second * 10,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
-
-	data := url.Values{}
-
-	data.Set("username", u)
-	data.Set("password", p)
-	data.Set("autologin", "on")
-	data.Set("redirect", "./ucp.php?mode=login")
-	data.Set("sid", sid)
-	data.Set("login", "Ligue-se")
-
-	encodedData := data.Encode()
-
-	req, err := http.NewRequest("POST", urlPath, strings.NewReader(encodedData))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Set("Content-Length", strconv.Itoa(len(encodedData)))
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
-
-	resp, err := client.Do(req)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer resp.Body.Close()
-
-	cookies := resp.Cookies()
-
-	var cookie []string
-
-	for _, c := range cookies {
-		cookie = append(cookie, c.Name+"="+c.Value)
-	}
-
-	cookieStr := strings.Join(cookie, "; ")
-
-	cookiesMap[u] = cookieStr
-
-	return cookieStr
+func NewLegendasDivx() *LegendasDivx {
+	return &LegendasDivx{}
 }
 
-func Login(u, p string, relogin bool) string {
-	cachedCookie := getCookieFromCache(u)
-
-	if cachedCookie != "" && !relogin {
-		return cachedCookie
-	}
-
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-
-	url := "https://www.legendasdivx.pt/forum/ucp.php?mode=login"
-
-	c := colly.NewCollector()
-
-	var cookie string
-
-	c.OnHTML("input[name=sid]", func(e *colly.HTMLElement) {
-		if e.Attr("value") != "" {
-			sid := e.Attr("value")
-
-			cookie = login(u, p, sid)
-
-			wg.Done()
-		}
-	})
-
-	c.Visit(url)
-
-	wg.Wait()
-
-	return cookie
-}
-
-func FetchSubtitles(imdbID string, cookie string) ([]models.Subtitle, error) {
+func (l *LegendasDivx) GetSubtitles(imdbID string, cookie string) ([]models.Subtitle, error) {
 	url := fmt.Sprintf("https://www.legendasdivx.pt/modules.php?name=Downloads&file=jz&d_op=search&op=_jz00&imdbid=%s", strings.Replace(imdbID, "tt", "", 1))
 
 	var season string
@@ -251,39 +168,40 @@ func FetchSubtitles(imdbID string, cookie string) ([]models.Subtitle, error) {
 	return subtitles, nil
 }
 
-func parseDescription(e *colly.HTMLElement) string {
-	return e.DOM.Find(".td_desc").Text()
+func (l *LegendasDivx) Login(u, p string, relogin bool) string {
+	cachedCookie := getCookieFromCache(u)
+
+	if cachedCookie != "" && !relogin {
+		return cachedCookie
+	}
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	url := "https://www.legendasdivx.pt/forum/ucp.php?mode=login"
+
+	c := colly.NewCollector()
+
+	var cookie string
+
+	c.OnHTML("input[name=sid]", func(e *colly.HTMLElement) {
+		if e.Attr("value") != "" {
+			sid := e.Attr("value")
+
+			cookie = login(u, p, sid)
+
+			wg.Done()
+		}
+	})
+
+	c.Visit(url)
+
+	wg.Wait()
+
+	return cookie
 }
 
-func parseTitle(e *colly.HTMLElement) string {
-	return e.DOM.Find(".sub_header").Eq(0).Find("b").Eq(0).Text()
-}
-
-func parseLanguage(e *colly.HTMLElement) string {
-	langImageSrc := e.DOM.Find("tr").Eq(0).Find("img").Eq(0).AttrOr("src", "")
-
-	var language string
-
-	if strings.Contains(langImageSrc, "portugal") {
-		language = "por"
-	}
-
-	if strings.Contains(langImageSrc, "brazil") {
-		language = "pob"
-	}
-
-	if strings.Contains(langImageSrc, "fInglaterra") {
-		language = "eng"
-	}
-
-	if strings.Contains(langImageSrc, "fEspanha") {
-		language = "spa"
-	}
-
-	return language
-}
-
-func Download(lid, cookie string) []string {
+func (l *LegendasDivx) Download(lid, cookie string) []string {
 	fmt.Println("Downloading subtitle with lid:", lid)
 
 	lidPath := "tmp/downloads/" + lid
@@ -348,4 +266,92 @@ func Download(lid, cookie string) []string {
 	files, _ := utils.ListFiles(lidPath)
 
 	return files
+}
+
+func login(u string, p string, sid string) string {
+	fmt.Println("Loggin to LegendasDivx with user:", u)
+
+	urlPath := "https://www.legendasdivx.pt/forum/ucp.php?mode=login"
+
+	client := &http.Client{
+		Timeout: time.Second * 10,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	data := url.Values{}
+
+	data.Set("username", u)
+	data.Set("password", p)
+	data.Set("autologin", "on")
+	data.Set("redirect", "./ucp.php?mode=login")
+	data.Set("sid", sid)
+	data.Set("login", "Ligue-se")
+
+	encodedData := data.Encode()
+
+	req, err := http.NewRequest("POST", urlPath, strings.NewReader(encodedData))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Length", strconv.Itoa(len(encodedData)))
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+
+	cookies := resp.Cookies()
+
+	var cookie []string
+
+	for _, c := range cookies {
+		cookie = append(cookie, c.Name+"="+c.Value)
+	}
+
+	cookieStr := strings.Join(cookie, "; ")
+
+	cookiesMap[u] = cookieStr
+
+	return cookieStr
+}
+
+func parseDescription(e *colly.HTMLElement) string {
+	return e.DOM.Find(".td_desc").Text()
+}
+
+func parseTitle(e *colly.HTMLElement) string {
+	return e.DOM.Find(".sub_header").Eq(0).Find("b").Eq(0).Text()
+}
+
+func parseLanguage(e *colly.HTMLElement) string {
+	langImageSrc := e.DOM.Find("tr").Eq(0).Find("img").Eq(0).AttrOr("src", "")
+
+	var language string
+
+	if strings.Contains(langImageSrc, "portugal") {
+		language = "por"
+	}
+
+	if strings.Contains(langImageSrc, "brazil") {
+		language = "pob"
+	}
+
+	if strings.Contains(langImageSrc, "fInglaterra") {
+		language = "eng"
+	}
+
+	if strings.Contains(langImageSrc, "fEspanha") {
+		language = "spa"
+	}
+
+	return language
 }

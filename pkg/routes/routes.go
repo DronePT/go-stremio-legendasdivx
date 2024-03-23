@@ -3,27 +3,29 @@ package routes
 import (
 	"github.com/dronept/go-stremio-legendasdivx/pkg/handlers"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/middleware"
+	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
 )
 
-func Init() *gin.Engine {
+func CreateRouter(services *services.Services) *gin.Engine {
 	router := gin.Default()
 	router.LoadHTMLFiles("templates/configure.tmpl")
 
+	h := handlers.NewHandlers(services)
+
 	// Configure CORS
 	router.Use(middleware.CORSMiddleware())
-
-	router.GET("/manifest.json", handlers.GetManifestHandler)
-	router.GET("/configure", handlers.GetConfigureHandler)
-	router.POST("/configure", handlers.PostConfigureHandler)
-
 	userRoutes := router.Group("/:config")
 
-	userRoutes.GET("/configure", handlers.GetConfigureHandler)
-	userRoutes.POST("/configure", handlers.PostConfigureHandler)
-	userRoutes.GET("/manifest.json", handlers.GetManifestHandler)
-	userRoutes.GET("/subtitles/:type/:id/*metadata", handlers.GetSubtitlesHandler)
-	userRoutes.GET("/download/:lid/*name", handlers.DownloadSubtitlesHandler)
+	router.GET("/manifest.json", h.GetManifestHandler)
+	router.GET("/configure", h.GetConfigureHandler)
+	router.POST("/configure", h.PostConfigureHandler)
+
+	userRoutes.GET("/configure", h.GetConfigureHandler)
+	userRoutes.POST("/configure", h.PostConfigureHandler)
+	userRoutes.GET("/manifest.json", h.GetManifestHandler)
+	userRoutes.GET("/subtitles/:type/:id/*metadata", h.GetSubtitlesHandler)
+	userRoutes.GET("/download/:lid/*name", h.DownloadSubtitlesHandler)
 
 	return router
 }
