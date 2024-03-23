@@ -9,6 +9,9 @@ require (
 	github.com/antchfx/htmlquery v1.3.0 // indirect
 	github.com/antchfx/xmlquery v1.3.18 // indirect
 	github.com/antchfx/xpath v1.2.4 // indirect
+	github.com/asticode/go-astikit v0.20.0 // indirect
+	github.com/asticode/go-astisub v0.26.2 // indirect
+	github.com/asticode/go-astits v1.8.0 // indirect
 	github.com/bkeepers/dotenv v3.1.0+incompatible // indirect
 	github.com/bodgit/plumbing v1.3.0 // indirect
 	github.com/bodgit/sevenzip v1.4.0 // indirect

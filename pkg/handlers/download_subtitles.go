@@ -1,12 +1,15 @@
 package handlers
 
 import (
+	"bytes"
 	"fmt"
+	"net/http"
 	"net/url"
 	"path"
 	"regexp"
 	"strings"
 
+	"github.com/asticode/go-astisub"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
 )
@@ -56,7 +59,30 @@ func downloadSubtitlesHandler(services *services.Services) func(c *gin.Context) 
 
 		fmt.Println("- Best match: ", files[bestScoreIndex])
 
-		// Send file
-		c.File(files[bestScoreIndex])
+		// Read file
+		sub, err := astisub.OpenFile(files[bestScoreIndex])
+
+		if err != nil {
+			// Handle the error here
+			fmt.Println("Error opening subtitle file:", err)
+			c.String(http.StatusInternalServerError, "")
+			return
+		}
+
+		c.Header("Content-type", "text/vrr")
+
+		// Convert to VTT
+		var buff = &bytes.Buffer{}
+		err = sub.WriteToWebVTT(buff)
+
+		if err != nil {
+			// Handle the error here
+			fmt.Println("Error converting subtitle file to VTT:", err)
+			c.String(http.StatusInternalServerError, "")
+			return
+		}
+
+		// Write file
+		c.String(http.StatusOK, buff.String())
 	}
 }
