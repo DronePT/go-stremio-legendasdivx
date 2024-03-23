@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	Port                   string
 	StremioSubtitleEncoder string
 	PublicEndpoint         string
 }
@@ -17,7 +18,18 @@ func InitConfig() {
 	godotenv.Load()
 
 	Values = &Config{
-		StremioSubtitleEncoder: os.Getenv("STREMIO_SUBTITLE_PREFIX"),
-		PublicEndpoint:         os.Getenv("PUBLIC_ENDPOINT"),
+		Port:                   getEnv("PORT", "8080"),
+		StremioSubtitleEncoder: getEnv("STREMIO_SUBTITLE_PREFIX", ""),
+		PublicEndpoint:         getEnv("PUBLIC_ENDPOINT", "http://localhost:8080"),
 	}
+}
+
+func getEnv(env, defaultValue string) string {
+	value := os.Getenv(env)
+
+	if value == "" {
+		return defaultValue
+	}
+
+	return value
 }

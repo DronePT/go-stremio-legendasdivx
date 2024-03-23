@@ -7,6 +7,7 @@ import (
 	"github.com/dronept/go-stremio-legendasdivx/configs"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/routes"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
+	"github.com/dronept/go-stremio-legendasdivx/pkg/version"
 )
 
 type Subtitle struct {
@@ -27,7 +28,11 @@ func main() {
 	services := services.NewServices()
 	router := routes.CreateRouter(services)
 
-	fmt.Println("Server running on port :8080")
+	fmt.Printf(
+		"Application version %s\nServer is running on :%s",
+		version.GetVersion(),
+		configs.Values.Port,
+	)
 
 	err := http.ListenAndServe(":8080", router)
 
