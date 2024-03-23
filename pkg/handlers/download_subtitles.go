@@ -14,8 +14,6 @@ import (
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
 	"github.com/saintfish/chardet"
-	"golang.org/x/text/encoding/charmap"
-	"golang.org/x/text/transform"
 )
 
 func scoredMatch(a, b string) int {
@@ -109,11 +107,11 @@ func decode(filename string) (o *astisub.Subtitles, err error) {
 
 	fmt.Println("Detected charset: ", result.Charset)
 
-	if result.Charset == "ISO-8859-1" {
-		decodingReader := transform.NewReader(file, charmap.ISO8859_1.NewDecoder())
+	// if result.Charset == "ISO-8859-1" {
+	// 	decodingReader := transform.NewReader(file, charmap.ISO8859_1.NewDecoder())
 
-		return astisub.ReadFromSRT(decodingReader)
-	}
+	// 	return astisub.ReadFromSRT(decodingReader)
+	// }
 
 	return astisub.ReadFromSRT(file)
 }
