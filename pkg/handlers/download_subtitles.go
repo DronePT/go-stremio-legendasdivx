@@ -14,6 +14,7 @@ import (
 	"github.com/asticode/go-astisub"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
+	"github.com/saintfish/chardet"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
 )
@@ -66,8 +67,6 @@ func downloadSubtitlesHandler(services *services.Services) func(c *gin.Context) 
 		// Read file
 		decoded, _ := decode(files[bestScoreIndex])
 
-		fmt.Println("- Decoded: ", decoded)
-
 		// transform reader to UTF-8
 		sub, err := astisub.ReadFromSRT(decoded)
 
@@ -106,15 +105,19 @@ func decode(filename string) (io.Reader, error) {
 	}
 	defer file.Close()
 
-	decodingReader := transform.NewReader(file, charmap.Windows1252.NewDecoder())
+	// Detect encoding
+	detector := chardet.NewTextDetector()
+	buf := make([]byte, 1024)
+	n, _ := file.Read(buf)
+	result, _ := detector.DetectBest(buf[:n])
 
-	return decodingReader, nil
+	fmt.Println("Detected charset: ", result.Charset)
 
-	// lines := []string{}
+	if result.Charset == "ISO-8859-1" {
+		decodingReader := transform.NewReader(file, charmap.ISO8859_1.NewDecoder())
 
-	// scanner := bufio.NewScanner(decodingReader)
-	// for scanner.Scan() {
-	// 	lines = append(lines, scanner.Text())
-	// }
-	// return strings.Join(lines, "\n"), scanner.Err()
+		return decodingReader, nil
+	}
+
+	return file, nil
 }
