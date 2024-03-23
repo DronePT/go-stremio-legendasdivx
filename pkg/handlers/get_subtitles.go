@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 
+	"github.com/dronept/go-stremio-legendasdivx/configs"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	"github.com/gin-gonic/gin"
 )
@@ -56,15 +56,15 @@ func getSubtitlesHandler(services *services.Services) func(c *gin.Context) {
 				id = strconv.Itoa(i)
 			}
 
-			downloadUrl := fmt.Sprintf("%s/%s/download/%s/%s/subtitles.vtt",
-				os.Getenv("PUBLIC_ENDPOINT"),
-				url.QueryEscape(c.Param("config")),
+			downloadUrl := fmt.Sprintf("%s/download/%s/%s/sub.vtt",
+				configs.Values.PublicEndpoint,
+				// url.QueryEscape(c.Param("config")),
 				subtitle.DownloadUrl,
 				url.QueryEscape(name),
 			)
 
 			url := fmt.Sprintf("%s%s",
-				os.Getenv("STREMIO_SUBTITLE_PREFIX"),
+				configs.Values.StremioSubtitleEncoder,
 				downloadUrl,
 			)
 

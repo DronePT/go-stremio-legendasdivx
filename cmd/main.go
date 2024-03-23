@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 
+	"github.com/dronept/go-stremio-legendasdivx/configs"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/routes"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
-	"github.com/joho/godotenv"
 )
 
 type Subtitle struct {
@@ -16,20 +15,19 @@ type Subtitle struct {
 	Subtitles   []string
 }
 
-func main() {
-	godotenv.Load()
+const AppVersion = "1.0.1"
 
-	// STREMIO_SUBTITLE_PREFIX=http://127.0.0.1:11470/subtitles.vtt?from=
-	// PUBLIC_ENDPOINT=http://localhost:8080
+func main() {
+	configs.InitConfig()
 
 	fmt.Printf(
 		"STREMIO_SUBTITLE_PREFIX: %s\nPUBLIC_ENDPOINT: %s\n\n",
-		os.Getenv("STREMIO_SUBTITLE_PREFIX"),
-		os.Getenv("PUBLIC_ENDPOINT"),
+		configs.Values.StremioSubtitleEncoder,
+		configs.Values.PublicEndpoint,
 	)
 
 	services := services.NewServices()
-	router := routes.CreateRouter(services)
+	router := routes.CreateRouter(services, AppVersion)
 
 	fmt.Println("Server running on port :8080")
 

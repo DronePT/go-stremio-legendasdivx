@@ -3,8 +3,8 @@ package handlers
 import (
 	"encoding/base64"
 	"net/url"
-	"os"
 
+	"github.com/dronept/go-stremio-legendasdivx/configs"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,7 +20,7 @@ func postConfigureHandler(c *gin.Context) {
 		[]byte(username + ":" + password),
 	)
 
-	url, err := url.Parse(os.Getenv("PUBLIC_ENDPOINT"))
+	url, err := url.Parse(configs.Values.PublicEndpoint)
 
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Internal Server Error"})

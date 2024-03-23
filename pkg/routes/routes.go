@@ -7,11 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func CreateRouter(services *services.Services) *gin.Engine {
+func CreateRouter(services *services.Services, appVersion string) *gin.Engine {
 	router := gin.Default()
 	router.LoadHTMLFiles("templates/configure.tmpl")
 
-	h := handlers.NewHandlers(services)
+	h := handlers.NewHandlers(services, appVersion)
 
 	// Configure CORS
 	router.Use(middleware.CORSMiddleware())
