@@ -19,18 +19,20 @@ type Subtitle struct {
 func main() {
 	configs.InitConfig()
 
-	fmt.Printf(
-		"STREMIO_SUBTITLE_PREFIX: %s\nPUBLIC_ENDPOINT: %s\n\n",
-		configs.Values.StremioSubtitleEncoder,
-		configs.Values.PublicEndpoint,
-	)
-
 	services := services.NewServices()
 	router := routes.CreateRouter(services)
 
 	fmt.Printf(
-		"Application version %s\nServer is running on :%s",
+		`
+Application version %s
+StremioSubtitleEncoder: %s
+PublicEndpoint: %s
+
+Server is running on :%s
+`,
 		version.GetVersion(),
+		configs.Values.StremioSubtitleEncoder,
+		configs.Values.PublicEndpoint,
 		configs.Values.Port,
 	)
 
