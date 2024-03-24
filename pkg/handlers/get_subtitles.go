@@ -56,9 +56,9 @@ func getSubtitlesHandler(services *services.Services) func(c *gin.Context) {
 				id = strconv.Itoa(i)
 			}
 
-			downloadUrl := fmt.Sprintf("%s/download/%s/%s/sub.vtt",
+			downloadUrl := fmt.Sprintf("%s/%s/download/%s/%s/sub.vtt",
 				configs.Values.PublicEndpoint,
-				// url.QueryEscape(c.Param("config")),
+				url.QueryEscape(c.Param("config")),
 				subtitle.DownloadUrl,
 				url.QueryEscape(name),
 			)
