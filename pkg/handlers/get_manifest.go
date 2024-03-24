@@ -19,12 +19,7 @@ func getManifestHandler() func(c *gin.Context) {
 			"name":        "LegendasDivx",
 			"description": "LegendasDivx subtitles addon for Stremio",
 
-			"resources": []map[string]any{
-				{
-					"name":  "subtitles",
-					"types": []string{"movie", "series"},
-				},
-			},
+			"resources":  []string{"subtitles"},
 			"catalogs":   []interface{}{},
 			"types":      []string{"movie", "series"},
 			"idPrefixes": []string{"tt"},
