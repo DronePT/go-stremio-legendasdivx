@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
+	legendasdivx "github.com/dronept/go-stremio-legendasdivx/pkg/services/legendas_divx"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,12 +14,12 @@ type Handlers struct {
 	DownloadSubtitlesHandler func(c *gin.Context)
 }
 
-func NewHandlers(s *services.Services) *Handlers {
+func NewHandlers(s *services.Services, c *legendasdivx.SubtitleCache) *Handlers {
 	return &Handlers{
 		GetManifestHandler:       getManifestHandler(),
 		GetConfigureHandler:      getConfigureHandler,
 		PostConfigureHandler:     postConfigureHandler,
-		GetSubtitlesHandler:      getSubtitlesHandler(s),
-		DownloadSubtitlesHandler: downloadSubtitlesHandler(s),
+		GetSubtitlesHandler:      getSubtitlesHandler(s, c),
+		DownloadSubtitlesHandler: downloadSubtitlesHandler(s, c),
 	}
 }

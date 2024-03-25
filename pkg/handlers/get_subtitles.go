@@ -8,6 +8,7 @@ import (
 
 	"github.com/dronept/go-stremio-legendasdivx/configs"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
+	legendasdivx "github.com/dronept/go-stremio-legendasdivx/pkg/services/legendas_divx"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,7 +18,7 @@ type SubtitleResponse struct {
 	Language string `json:"lang"`
 }
 
-func getSubtitlesHandler(services *services.Services) func(c *gin.Context) {
+func getSubtitlesHandler(services *services.Services, cache *legendasdivx.SubtitleCache) func(c *gin.Context) {
 	return func(c *gin.Context) {
 
 		// Get imdb id from request parmams
@@ -36,15 +37,15 @@ func getSubtitlesHandler(services *services.Services) func(c *gin.Context) {
 
 		var subtitles []SubtitleResponse
 
-		s, err := services.LegendasDivx.GetSubtitles(imdbId, cookie)
+		ldSubtitles, err := services.LegendasDivx.GetSubtitles(imdbId, cookie)
 
 		if err != nil && err.Error() == "Login failed" {
 			getCookie(c, true, services)
-			getSubtitlesHandler(services)(c)
+			getSubtitlesHandler(services, cache)(c)
 			return
 		}
 
-		for i, subtitle := range s {
+		for i, subtitle := range ldSubtitles {
 			name := subtitle.Name
 			id := subtitle.Id
 
@@ -56,12 +57,15 @@ func getSubtitlesHandler(services *services.Services) func(c *gin.Context) {
 				id = strconv.Itoa(i)
 			}
 
-			downloadUrl := fmt.Sprintf("%s/%s/download/%s/%s/sub.vtt",
+			// subtitle.DownloadUrl,
+			downloadUrl := fmt.Sprintf("%s/%s/d/%s/%d/sub.vtt",
 				configs.Values.PublicEndpoint,
 				url.QueryEscape(c.Param("config")),
 				subtitle.DownloadUrl,
-				url.QueryEscape(name),
+				i,
 			)
+
+			cache.Set(subtitle.DownloadUrl, strconv.Itoa(i), subtitle.Name)
 
 			url := fmt.Sprintf("%s%s",
 				configs.Values.StremioSubtitleEncoder,

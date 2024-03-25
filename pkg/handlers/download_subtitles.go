@@ -12,6 +12,7 @@ import (
 
 	"github.com/asticode/go-astisub"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
+	legendasdivx "github.com/dronept/go-stremio-legendasdivx/pkg/services/legendas_divx"
 	"github.com/gin-gonic/gin"
 	"github.com/saintfish/chardet"
 )
@@ -35,11 +36,18 @@ func scoredMatch(a, b string) int {
 	return score
 }
 
-func downloadSubtitlesHandler(services *services.Services) func(c *gin.Context) {
+func downloadSubtitlesHandler(services *services.Services, cache *legendasdivx.SubtitleCache) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		// get :lid and :name from params
 		lid := c.Param("lid")
-		name := strings.Split(c.Param("name"), ".srt")[0]
+		id := c.Param("id")
+
+		name, hasCache := cache.Get(lid, id)
+
+		if !hasCache {
+			c.String(http.StatusNotFound, "")
+			return
+		}
 
 		// Download
 		files := services.LegendasDivx.Download(lid, getCookie(c, false, services))
@@ -47,7 +55,7 @@ func downloadSubtitlesHandler(services *services.Services) func(c *gin.Context) 
 		lastScore := -1
 		bestScoreIndex := 0
 
-		decodedName, _ := url.QueryUnescape(name)
+		decodedName, _ := url.QueryUnescape(name.(string))
 
 		fmt.Println("- Matching: ", decodedName)
 

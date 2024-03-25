@@ -7,6 +7,7 @@ import (
 	"github.com/dronept/go-stremio-legendasdivx/configs"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/routes"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
+	legendasdivx "github.com/dronept/go-stremio-legendasdivx/pkg/services/legendas_divx"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/version"
 )
 
@@ -20,7 +21,8 @@ func main() {
 	configs.InitConfig()
 
 	services := services.NewServices()
-	router := routes.CreateRouter(services)
+	subtitlesCache := legendasdivx.NewSubtitleCache()
+	router := routes.CreateRouter(services, subtitlesCache)
 
 	fmt.Printf(
 		`
