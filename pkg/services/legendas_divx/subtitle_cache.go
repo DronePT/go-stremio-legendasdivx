@@ -16,8 +16,8 @@ type CachedData struct {
 }
 
 const (
-	defaultExpiration = 5 * time.Minute
-	cleanupInterval   = 10 * time.Minute
+	defaultExpiration = 2 * time.Hour
+	cleanupInterval   = 4 * time.Hour
 )
 
 func NewSubtitleCache() *SubtitleCache {
