@@ -9,6 +9,7 @@ import (
 	"github.com/dronept/go-stremio-legendasdivx/configs"
 	"github.com/dronept/go-stremio-legendasdivx/pkg/services"
 	legendasdivx "github.com/dronept/go-stremio-legendasdivx/pkg/services/legendas_divx"
+	"github.com/dronept/go-stremio-legendasdivx/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -57,15 +58,26 @@ func getSubtitlesHandler(services *services.Services, cache *legendasdivx.Subtit
 				id = strconv.Itoa(i)
 			}
 
+			credentials := url.QueryEscape(c.Param("config"))
+			username, _ := utils.ParseUserData(credentials)
+
 			// subtitle.DownloadUrl,
 			downloadUrl := fmt.Sprintf("%s/%s/d/%s/%d/sub.vtt",
 				configs.Values.PublicEndpoint,
-				url.QueryEscape(c.Param("config")),
+				username,
 				subtitle.DownloadUrl,
 				i,
 			)
 
-			cache.Set(subtitle.DownloadUrl, strconv.Itoa(i), subtitle.Name)
+			cache.Set(
+				username,
+				subtitle.DownloadUrl,
+				strconv.Itoa(i),
+				&legendasdivx.CachedData{
+					Name:        subtitle.Name,
+					Credentials: cookie,
+				},
+			)
 
 			url := fmt.Sprintf("%s%s",
 				configs.Values.StremioSubtitleEncoder,

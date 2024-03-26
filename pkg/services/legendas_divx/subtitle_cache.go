@@ -10,6 +10,11 @@ type SubtitleCache struct {
 	subtitles *cache.Cache
 }
 
+type CachedData struct {
+	Name        string
+	Credentials string
+}
+
 const (
 	defaultExpiration = 5 * time.Minute
 	cleanupInterval   = 10 * time.Minute
@@ -22,14 +27,20 @@ func NewSubtitleCache() *SubtitleCache {
 	}
 }
 
-func (sc *SubtitleCache) Get(imdbId, id string) (interface{}, bool) {
-	key := imdbId + id
+func (sc *SubtitleCache) Get(username, imdbId, id string) (*CachedData, bool) {
+	key := username + imdbId + id
 
-	return sc.subtitles.Get(key)
+	data, exists := sc.subtitles.Get(key)
+
+	if !exists {
+		return &CachedData{}, false
+	}
+
+	return data.(*CachedData), true
 }
 
-func (sc *SubtitleCache) Set(imdbId, id string, subtitle interface{}) {
-	key := imdbId + id
+func (sc *SubtitleCache) Set(username, imdbId, id string, subtitle *CachedData) {
+	key := username + imdbId + id
 
 	sc.subtitles.Set(key, subtitle, cache.DefaultExpiration)
 }

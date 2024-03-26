@@ -41,21 +41,24 @@ func downloadSubtitlesHandler(services *services.Services, cache *legendasdivx.S
 		// get :lid and :name from params
 		lid := c.Param("lid")
 		id := c.Param("id")
+		username := c.Param("config")
 
-		name, hasCache := cache.Get(lid, id)
+		cached, hasCache := cache.Get(username, lid, id)
 
 		if !hasCache {
 			c.String(http.StatusNotFound, "")
 			return
 		}
 
+		cookie := cached.Credentials
+
 		// Download
-		files := services.LegendasDivx.Download(lid, getCookie(c, false, services))
+		files := services.LegendasDivx.Download(lid, cookie)
 
 		lastScore := -1
 		bestScoreIndex := 0
 
-		decodedName, _ := url.QueryUnescape(name.(string))
+		decodedName, _ := url.QueryUnescape(cached.Name)
 
 		fmt.Println("- Matching: ", decodedName)
 
